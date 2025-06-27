@@ -1,0 +1,6 @@
+defaults:
+    - experiment: microstrip
+    - _self_
+
+output_dir: out
+template_dir: templates

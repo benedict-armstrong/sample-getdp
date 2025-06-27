@@ -1,46 +1,31 @@
-import os
-import uuid
-from jinja2 import Environment, FileSystemLoader
-
-# Define paths
-TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "..", "templates")
-OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "out")
-TEMPLATES = ["microstrip.geo.j2", "microstrip.pro.j2"]
-
-context = {
-    "h": 8e-3,  # height of the dielectric
-    "w": 7e-3,  # width of the microstrip (length in x direction)
-    "t": 0.07e-2,  # thickness of the microstrip (height in y direction)
-    "xBox": 1.8e-2,  # width of the air box
-    "yBox": 1.2e-2,  # height of the air box
-}
+from src.experiments.microstrip import run_microstrip_experiments
+from src.samplers import sample_param
+import hydra
+from omegaconf import DictConfig
 
 
-def main():
-    # Ensure output directory exists
-    os.makedirs(OUT_DIR, exist_ok=True)
+@hydra.main(version_base=None, config_path="../config", config_name="main")
+def main(cfg: DictConfig):
+    exp_cfg = cfg.experiment
+    n_samples = exp_cfg.n_samples
+    params = exp_cfg.parameters
+    output_dir = cfg.output_dir
+    template_dir = cfg.get("template_dir", None)
 
-    # Generate unique experiment id
-    experiment_id = str(uuid.uuid4())
-    experiment_dir = os.path.join(OUT_DIR, experiment_id)
-    os.makedirs(experiment_dir, exist_ok=True)
+    # Sample values for each parameter
+    sampled = {
+        param: sample_param(param_cfg, n_samples) for param, param_cfg in params.items()
+    }
 
-    # Set up Jinja2 environment with custom delimiters
-    env = Environment(
-        loader=FileSystemLoader(TEMPLATE_DIR),
-        variable_start_string="[[",
-        variable_end_string="]]",
+    run_microstrip_experiments(
+        h_values=sampled["h"],
+        w_values=sampled["w"],
+        t_values=sampled["t"],
+        xBox_values=sampled["xBox"],
+        yBox_values=sampled["yBox"],
+        out_dir=output_dir,
+        template_dir=template_dir,
     )
-
-    for template_name in TEMPLATES:
-        template = env.get_template(template_name)
-        rendered = template.render(context)
-        # Remove .j2 extension for output
-        output_name = template_name[:-3]
-        output_path = os.path.join(experiment_dir, output_name)
-        with open(output_path, "w") as f:
-            f.write(rendered)
-    print(f"Experiment created: {experiment_dir}")
 
 
 if __name__ == "__main__":
