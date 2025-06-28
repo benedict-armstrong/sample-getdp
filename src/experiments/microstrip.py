@@ -4,9 +4,7 @@ import json
 from jinja2 import Environment, FileSystemLoader
 from dataclasses import dataclass, asdict
 from typing import Sequence, Optional
-
 from src.config.path import resolve_path
-
 
 TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "..", "templates")
 OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "out")

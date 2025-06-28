@@ -337,9 +337,9 @@ h = 2.e-3; // vertical position of the cut
 PostOperation {
   { Name Map; NameOfPostProcessing EleSta_v;
      Operation {
-       Print [ v, OnElementsOf Vol_Ele, File "mStrip_v.pos" ];
-       Print [ e, OnElementsOf Vol_Ele, File "mStrip_e.pos" ];
-       Print [ e, OnLine {{e,h,0}{14.e-3,h,0}}{60}, File "Cut_e.pos" ];
+       Print [ v, OnElementsOf Vol_Ele, File "mStrip_v.res" ];
+       Print [ e, OnElementsOf Vol_Ele, File "mStrip_e.res" ];
+       Print [ e, OnLine {{e,h,0}{14.e-3,h,0}}{60}, File "Cut_e.res" ];
      }
   }
   { Name Cut; NameOfPostProcessing EleSta_v;
