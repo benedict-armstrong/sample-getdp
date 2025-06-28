@@ -1,4 +1,7 @@
-from src.experiments.microstrip import run_microstrip_experiments
+from src.experiments.microstrip import (
+    run_microstrip_experiments,
+    create_contexts_from_arrays,
+)
 from src.samplers import sample_param
 import hydra
 from omegaconf import DictConfig, OmegaConf
@@ -22,12 +25,12 @@ def main(cfg: DictConfig) -> None:
         param: sample_param(param_cfg, n_samples) for param, param_cfg in params.items()
     }
 
+    # Create contexts from the sampled parameter arrays
+    contexts = create_contexts_from_arrays(sampled)
+
+    # Run experiments with the contexts
     run_microstrip_experiments(
-        h_values=sampled["h"],
-        w_values=sampled["w"],
-        t_values=sampled["t"],
-        xBox_values=sampled["xBox"],
-        yBox_values=sampled["yBox"],
+        contexts=contexts,
         out_dir=output_dir,
         template_dir=template_dir,
     )

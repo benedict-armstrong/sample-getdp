@@ -2,8 +2,8 @@ import os
 import uuid
 import json
 from jinja2 import Environment, FileSystemLoader
-from dataclasses import dataclass, asdict
-from typing import Sequence, Optional
+from dataclasses import dataclass, asdict, fields
+from typing import Sequence, Optional, Dict
 from src.config.path import resolve_path
 
 TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "..", "templates")
@@ -18,20 +18,16 @@ class MicrostripContext:
     t: float
     xBox: float
     yBox: float
+    initial_voltage: float
 
 
 def run_microstrip_experiments(
-    h_values: Sequence[float],
-    w_values: Sequence[float],
-    t_values: Sequence[float],
-    xBox_values: Sequence[float],
-    yBox_values: Sequence[float],
+    contexts: Sequence[MicrostripContext],
     out_dir: Optional[str] = None,
     template_dir: Optional[str] = None,
 ):
     """
-    Runs microstrip experiments for each row of the provided parameter arrays.
-    Each index corresponds to one experiment (not a Cartesian product).
+    Runs microstrip experiments for each MicrostripContext provided.
     """
     resolved_out_dir = (
         resolve_path(out_dir) if out_dir is not None else resolve_path(OUT_DIR)
@@ -49,19 +45,7 @@ def run_microstrip_experiments(
         variable_end_string="]]",
     )
 
-    n = len(h_values)
-    assert all(
-        len(arr) == n for arr in [w_values, t_values, xBox_values, yBox_values]
-    ), "All parameter arrays must have the same length!"
-
-    for i in range(n):
-        ctx = MicrostripContext(
-            h=h_values[i],
-            w=w_values[i],
-            t=t_values[i],
-            xBox=xBox_values[i],
-            yBox=yBox_values[i],
-        )
+    for ctx in contexts:
         experiment_id = str(uuid.uuid4())
         experiment_dir = os.path.join(resolved_out_dir, experiment_id)
         os.makedirs(experiment_dir, exist_ok=True)
@@ -77,3 +61,39 @@ def run_microstrip_experiments(
         config_path = os.path.join(experiment_dir, "config.json")
         with open(config_path, "w") as f:
             json.dump(asdict(ctx), f, indent=2)
+
+
+def create_contexts_from_arrays(
+    param_arrays: Dict[str, Sequence[float]],
+) -> Sequence[MicrostripContext]:
+    """
+    Helper function to create MicrostripContext objects from parameter arrays.
+
+    Args:
+        param_arrays: Dictionary mapping parameter names to sequences of values.
+                     Keys should match MicrostripContext field names.
+
+    Returns:
+        Sequence of MicrostripContext objects
+    """
+    # Get the field names from the dataclass
+    field_names = [field.name for field in fields(MicrostripContext)]
+
+    # Validate that all required fields are provided
+    missing_fields = set(field_names) - set(param_arrays.keys())
+    if missing_fields:
+        raise ValueError(f"Missing required parameter arrays: {missing_fields}")
+
+    # Validate that all arrays have the same length
+    lengths = [len(arr) for arr in param_arrays.values()]
+    if not all(length == lengths[0] for length in lengths):
+        raise ValueError("All parameter arrays must have the same length!")
+
+    n = lengths[0]
+    contexts = []
+
+    for i in range(n):
+        kwargs = {field_name: param_arrays[field_name][i] for field_name in field_names}
+        contexts.append(MicrostripContext(**kwargs))
+
+    return contexts

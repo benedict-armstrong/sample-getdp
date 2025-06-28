@@ -20,3 +20,7 @@ parameters:
         sampler: loguniform
         min: 0.011
         max: 0.014
+    initial_voltage:
+        sampler: uniform
+        min: 1e-4
+        max: 1e-3
