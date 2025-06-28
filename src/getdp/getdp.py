@@ -491,26 +491,60 @@ class GetDPReader:
                 "version": format_data,
             }
 
-        # Parse solution data
-        solution_match = re.search(
+        # Parse all solution blocks
+        solution_blocks = re.finditer(
             r"\$Solution  /\* (.*?) \*/\n(.*?)\n\$EndSolution", content, re.DOTALL
         )
-        if solution_match:
+
+        solution_data["solution_blocks"] = []
+
+        for solution_match in solution_blocks:
             solution_info = solution_match.group(1)
             solution_content = solution_match.group(2).strip().split("\n")
 
-            solutions = []
-            for line in solution_content:
-                if line.strip():
-                    parts = line.split()
-                    if len(parts) >= 2:
-                        value = float(parts[0])
-                        # Second value is often imaginary part or additional component
-                        imag_value = float(parts[1]) if len(parts) > 1 else 0.0
-                        solutions.append(complex(value, imag_value))
+            if len(solution_content) < 1:
+                continue
 
-            solution_data["solutions"] = solutions
-            solution_data["solution_info"] = solution_info
+            # Parse header line: DOFDATA-NUMBER TIME-VALUE TIME-IMAG-VALUE TIME-STEP-NUMBER
+            header_parts = solution_content[0].split()
+            if len(header_parts) >= 4:
+                dofdata_number = int(header_parts[0])
+                time_value = float(header_parts[1])
+                time_imag_value = float(header_parts[2])
+                time_step_number = int(header_parts[3])
+            else:
+                # Fallback if header format is different
+                dofdata_number = 0
+                time_value = 0.0
+                time_imag_value = 0.0
+                time_step_number = 0
+
+            # Parse solution values (one per line after header)
+            solutions = []
+            for line in solution_content[1:]:
+                if line.strip():
+                    # Each line should contain one solution value (possibly complex)
+                    parts = line.split()
+                    if len(parts) >= 1:
+                        real_value = float(parts[0])
+                        imag_value = float(parts[1]) if len(parts) > 1 else 0.0
+                        solutions.append(complex(real_value, imag_value))
+
+            solution_block = {
+                "dofdata_number": dofdata_number,
+                "time_value": time_value,
+                "time_imag_value": time_imag_value,
+                "time_step_number": time_step_number,
+                "solution_info": solution_info,
+                "solutions": solutions,
+            }
+            solution_data["solution_blocks"].append(solution_block)
+
+        # For backward compatibility, keep the first solution block as "solutions"
+        if solution_data["solution_blocks"]:
+            solution_data["solutions"] = solution_data["solution_blocks"][0][
+                "solutions"
+            ]
 
     def _parse_node_data(self, nodedata_content: List[str], solution_data: Dict):
         """Parse NodeData section from mesh-format .res file"""
@@ -574,7 +608,72 @@ class GetDPReader:
         mesh = pv.UnstructuredGrid(cells, cell_types, points)
 
         # Add solution data if available
-        if self.solution_data and "solutions" in self.solution_data:
+        if self.solution_data and "solution_blocks" in self.solution_data:
+            for sol_block in self.solution_data["solution_blocks"]:
+                solutions = sol_block["solutions"]
+                dofdata_number = sol_block["dofdata_number"]
+
+                # Find corresponding DOF data block
+                corresponding_dof_block = None
+                if self.dof_data and "dof_data_blocks" in self.dof_data:
+                    for dof_block in self.dof_data["dof_data_blocks"]:
+                        if dof_block["number"] == dofdata_number:
+                            corresponding_dof_block = dof_block
+                            break
+
+                if corresponding_dof_block and solutions:
+                    # Create arrays for solution data mapped to mesh points
+                    solution_real = np.zeros(len(points))
+                    solution_imag = np.zeros(len(points))
+                    has_solution = np.zeros(len(points), dtype=bool)
+
+                    # Create mapping from equation number to solution value
+                    equation_to_solution = {}
+                    solution_idx = 0
+
+                    # Build equation number mapping for unknowns only
+                    for dof in corresponding_dof_block["dofs"]:
+                        if dof["type"] == 1:  # UNKNOWN
+                            eq_num = dof["data"].get("equation_number", 0)
+                            if eq_num > 0 and solution_idx < len(solutions):
+                                equation_to_solution[eq_num] = solutions[solution_idx]
+                                solution_idx += 1
+
+                    # Map solutions to mesh points
+                    for dof in corresponding_dof_block["dofs"]:
+                        entity_idx = dof["entity"] - 1  # Convert to 0-based indexing
+                        if 0 <= entity_idx < len(points):
+                            if dof["type"] == 1:  # UNKNOWN
+                                eq_num = dof["data"].get("equation_number", 0)
+                                if eq_num in equation_to_solution:
+                                    sol_value = equation_to_solution[eq_num]
+                                    solution_real[entity_idx] = sol_value.real
+                                    solution_imag[entity_idx] = sol_value.imag
+                                    has_solution[entity_idx] = True
+                            elif dof["type"] == 2:  # FIXED_VALUE
+                                # Use the prescribed value for fixed DOFs
+                                fixed_value = dof["data"].get("value", 0.0)
+                                solution_real[entity_idx] = fixed_value
+                                solution_imag[entity_idx] = 0.0
+                                has_solution[entity_idx] = True
+
+                    # Add arrays to mesh
+                    suffix = (
+                        f"_block{dofdata_number}"
+                        if len(self.solution_data["solution_blocks"]) > 1
+                        else ""
+                    )
+                    mesh.point_data[f"solution_real{suffix}"] = solution_real
+                    mesh.point_data[f"solution_imag{suffix}"] = solution_imag
+                    mesh.point_data[f"solution_magnitude{suffix}"] = np.sqrt(
+                        solution_real**2 + solution_imag**2
+                    )
+                    mesh.point_data[f"has_solution{suffix}"] = has_solution.astype(
+                        float
+                    )
+
+        # Backward compatibility: if no solution_blocks but has solutions
+        elif self.solution_data and "solutions" in self.solution_data:
             solutions = self.solution_data["solutions"]
             if len(solutions) == len(points):
                 # Add real and imaginary parts as separate arrays
@@ -715,9 +814,22 @@ class GetDPReader:
             }
 
         if self.solution_data:
+            num_solution_blocks = len(self.solution_data.get("solution_blocks", []))
+            total_solutions = sum(
+                len(block.get("solutions", []))
+                for block in self.solution_data.get("solution_blocks", [])
+            )
+
             summary["solution"] = {
-                "num_solutions": len(self.solution_data.get("solutions", [])),
+                "num_solution_blocks": num_solution_blocks,
+                "total_solutions": total_solutions,
                 "has_mesh": bool(self.solution_data.get("mesh_nodes", {})),
             }
+
+            # Add backward compatibility for old format
+            if not num_solution_blocks and "solutions" in self.solution_data:
+                summary["solution"]["total_solutions"] = len(
+                    self.solution_data["solutions"]
+                )
 
         return summary
