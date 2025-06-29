@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import uuid
 import json
 from jinja2 import Environment, FileSystemLoader
@@ -24,7 +25,7 @@ class MicrostripContext:
 def run_microstrip_experiments(
     contexts: Sequence[MicrostripContext],
     out_dir: Optional[str] = None,
-    template_dir: Optional[str] = None,
+    template_dir: Optional[Path] = None,
 ):
     """
     Runs microstrip experiments for each MicrostripContext provided.
@@ -33,9 +34,7 @@ def run_microstrip_experiments(
         resolve_path(out_dir) if out_dir is not None else resolve_path(OUT_DIR)
     )
     resolved_template_dir = (
-        resolve_path(template_dir)
-        if template_dir is not None
-        else resolve_path(TEMPLATE_DIR)
+        template_dir if template_dir is not None else Path(TEMPLATE_DIR)
     )
     os.makedirs(resolved_out_dir, exist_ok=True)
 

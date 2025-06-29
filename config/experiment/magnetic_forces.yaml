@@ -1,0 +1,14 @@
+n_samples: 5
+parameters:
+    num_magnets:
+        sampler: uniform_discrete
+        min: 1
+        max: 20
+    infinite_box:
+        sampler: uniform_discrete
+        values: [0, 1]
+    shape:
+        sampler: uniform_discrete
+        values: [0, 1] # 0: cylinder, 1: cube
+
+directory: MagneticForces

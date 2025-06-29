@@ -6,6 +6,7 @@ from src.samplers import sample_param
 import hydra
 from omegaconf import DictConfig, OmegaConf
 from src.config.experiment_config import MainConfig, dict_to_main_config
+import os
 
 
 @hydra.main(version_base=None, config_path="../config", config_name="main")
@@ -32,7 +33,7 @@ def main(cfg: DictConfig) -> None:
     run_microstrip_experiments(
         contexts=contexts,
         out_dir=output_dir,
-        template_dir=template_dir,
+        template_dir=os.path.join(template_dir, exp_cfg.directory),
     )
 
 

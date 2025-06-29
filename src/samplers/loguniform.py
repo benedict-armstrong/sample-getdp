@@ -1,10 +1,14 @@
+from dataclasses import dataclass
+
 import numpy as np
-from typing import Tuple
+
+from .base import Sampler
 
 
-def sample_loguniform(low: float, high: float, size: int) -> np.ndarray:
-    """
-    Sample from a log-uniform distribution between [low, high) with the given size.
-    Returns a numpy array of samples.
-    """
-    return np.exp(np.random.uniform(np.log(low), np.log(high), size))
+@dataclass
+class LogUniform(Sampler):
+    min: float
+    max: float
+
+    def sample(self, n_samples: int) -> np.ndarray:
+        return np.exp(np.random.uniform(np.log(self.min), np.log(self.max), n_samples))

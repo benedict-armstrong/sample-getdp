@@ -1,10 +1,14 @@
+from dataclasses import dataclass
+
 import numpy as np
-from typing import Tuple
+
+from .base import Sampler
 
 
-def sample_normal(mean: float, std: float, size: int) -> np.ndarray:
-    """
-    Sample from a normal (Gaussian) distribution with given mean, std, and size.
-    Returns a numpy array of samples.
-    """
-    return np.random.normal(mean, std, size)
+@dataclass
+class Normal(Sampler):
+    mean: float
+    std: float
+
+    def sample(self, n_samples: int) -> np.ndarray:
+        return np.random.normal(self.mean, self.std, n_samples)

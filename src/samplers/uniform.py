@@ -1,10 +1,14 @@
+from dataclasses import dataclass
+
 import numpy as np
-from typing import Tuple
+
+from .base import Sampler
 
 
-def sample_uniform(low: float, high: float, size: int) -> np.ndarray:
-    """
-    Sample from a uniform distribution in [low, high) with the given size.
-    Returns a numpy array of samples.
-    """
-    return np.random.uniform(low, high, size)
+@dataclass
+class Uniform(Sampler):
+    min: float
+    max: float
+
+    def sample(self, n_samples: int) -> np.ndarray:
+        return np.random.uniform(self.min, self.max, n_samples)
