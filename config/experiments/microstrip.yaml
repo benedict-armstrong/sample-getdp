@@ -1,3 +1,4 @@
+type: microstrip
 n_samples: 5
 parameters:
     h:

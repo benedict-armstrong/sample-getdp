@@ -1,3 +1,4 @@
+type: magnetic_forces
 n_samples: 5
 parameters:
     num_magnets:

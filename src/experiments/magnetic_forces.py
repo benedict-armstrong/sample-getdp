@@ -10,7 +10,7 @@ from src.config.path import resolve_path
 
 TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "..", "templates")
 OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "out")
-TEMPLATES = ["microstrip.geo.j2", "microstrip.pro.j2"]
+TEMPLATES = ["magnets.geo.j2", "magnets.pro.j2", "magnets_common.pro.j2"]
 
 
 def convert_numpy_types(obj: Any) -> Any:
@@ -30,29 +30,30 @@ def convert_numpy_types(obj: Any) -> Any:
 
 
 @dataclass
-class MicrostripContext:
-    h: float
-    w: float
-    t: float
-    xBox: float
-    yBox: float
-    initial_voltage: float
+class MagneticForcesContext:
+    num_magnets: int
+    infinite_box: int  # 0 or 1
+    shape: int  # 0: cylinder, 1: cube
 
 
-def run_microstrip_experiments(
-    contexts: Sequence[MicrostripContext],
+def run_magnetic_forces_experiments(
+    contexts: Sequence[MagneticForcesContext],
     out_dir: Optional[str] = None,
     template_dir: Optional[Path] = None,
 ):
     """
-    Runs microstrip experiments for each MicrostripContext provided.
+    Runs magnetic forces experiments for each MagneticForcesContext provided.
     """
     resolved_out_dir = (
         resolve_path(out_dir) if out_dir is not None else resolve_path(OUT_DIR)
     )
-    resolved_template_dir = (
-        template_dir if template_dir is not None else Path(TEMPLATE_DIR)
-    )
+
+    # Use the provided template_dir directly, or fall back to default + subdirectory
+    if template_dir is not None:
+        resolved_template_dir = template_dir
+    else:
+        resolved_template_dir = Path(TEMPLATE_DIR) / "MagenticForces"
+
     os.makedirs(resolved_out_dir, exist_ok=True)
 
     env = Environment(
@@ -65,14 +66,24 @@ def run_microstrip_experiments(
         experiment_id = str(uuid.uuid4())
         experiment_dir = os.path.join(resolved_out_dir, experiment_id)
         os.makedirs(experiment_dir, exist_ok=True)
-        # Render templates
+
+        # Copy the static InfiniteBox.geo file
+        static_file_src = resolved_template_dir / "InfiniteBox.geo"
+        static_file_dst = os.path.join(experiment_dir, "InfiniteBox.geo")
+        if static_file_src.exists():
+            import shutil
+
+            shutil.copy2(static_file_src, static_file_dst)
+
+        # Render Jinja2 templates
         for template_name in TEMPLATES:
             template = env.get_template(template_name)
             rendered = template.render(asdict(ctx))
-            output_name = template_name[:-3]
+            output_name = template_name[:-3]  # Remove .j2 extension
             output_path = os.path.join(experiment_dir, output_name)
             with open(output_path, "w") as f:
                 f.write(rendered)
+
         # Save config
         config_path = os.path.join(experiment_dir, "config.json")
         with open(config_path, "w") as f:
@@ -80,20 +91,20 @@ def run_microstrip_experiments(
 
 
 def create_contexts_from_arrays(
-    param_arrays: Dict[str, Sequence[float]],
-) -> Sequence[MicrostripContext]:
+    param_arrays: Dict[str, Sequence],
+) -> Sequence[MagneticForcesContext]:
     """
-    Helper function to create MicrostripContext objects from parameter arrays.
+    Helper function to create MagneticForcesContext objects from parameter arrays.
 
     Args:
         param_arrays: Dictionary mapping parameter names to sequences of values.
-                     Keys should match MicrostripContext field names.
+                     Keys should match MagneticForcesContext field names.
 
     Returns:
-        Sequence of MicrostripContext objects
+        Sequence of MagneticForcesContext objects
     """
     # Get the field names from the dataclass
-    field_names = [field.name for field in fields(MicrostripContext)]
+    field_names = [field.name for field in fields(MagneticForcesContext)]
 
     # Validate that all required fields are provided
     missing_fields = set(field_names) - set(param_arrays.keys())
@@ -110,6 +121,6 @@ def create_contexts_from_arrays(
 
     for i in range(n):
         kwargs = {field_name: param_arrays[field_name][i] for field_name in field_names}
-        contexts.append(MicrostripContext(**kwargs))
+        contexts.append(MagneticForcesContext(**kwargs))
 
     return contexts

@@ -1,6 +1,44 @@
 from pathlib import Path
 from .experiments.getdp_cli import GetDPCLI
 import subprocess
+import json
+
+
+# Mapping of experiment types to their main geometry and problem files
+EXPERIMENT_FILES = {
+    "microstrip": {"geo": "microstrip.geo", "pro": "microstrip.pro"},
+    "magnetic_forces": {"geo": "magnets.geo", "pro": "magnets.pro"},
+}
+
+
+def get_experiment_type(exp_dir: Path) -> str:
+    """
+    Determine the experiment type from the config.json file.
+
+    Args:
+        exp_dir: Path to the experiment directory
+
+    Returns:
+        str: The experiment type, or None if cannot be determined
+    """
+    config_file = exp_dir / "config.json"
+    if not config_file.exists():
+        return None
+
+    try:
+        with open(config_file, "r") as f:
+            config = json.load(f)
+
+        # Check for experiment-specific parameters to determine type
+        if "h" in config and "w" in config and "t" in config:
+            return "microstrip"
+        elif "num_magnets" in config and "infinite_box" in config and "shape" in config:
+            return "magnetic_forces"
+        else:
+            return None
+
+    except (json.JSONDecodeError, KeyError):
+        return None
 
 
 def run_all_experiments_and_save_results(
@@ -18,17 +56,38 @@ def run_all_experiments_and_save_results(
     for exp_dir in out_path.iterdir():
         if not exp_dir.is_dir():
             continue
-        geo_file = exp_dir / "microstrip.geo"
-        pro_file = exp_dir / "microstrip.pro"
-        if not geo_file.exists() or not pro_file.exists():
+
+        # Determine experiment type
+        exp_type = get_experiment_type(exp_dir)
+        if exp_type is None:
+            print(f"Skipping {exp_dir.name}: Unknown experiment type")
             continue
 
-        print(f"Processing experiment in {exp_dir.name}")
+        if exp_type not in EXPERIMENT_FILES:
+            print(f"Skipping {exp_dir.name}: Unsupported experiment type '{exp_type}'")
+            continue
+
+        # Get the appropriate file names for this experiment type
+        file_config = EXPERIMENT_FILES[exp_type]
+        geo_file = exp_dir / file_config["geo"]
+        pro_file = exp_dir / file_config["pro"]
+
+        if not geo_file.exists() or not pro_file.exists():
+            print(
+                f"Skipping {exp_dir.name}: Missing required files ({file_config['geo']} or {file_config['pro']})"
+            )
+            continue
+
+        print(f"Processing {exp_type} experiment in {exp_dir.name}")
 
         # Generate mesh with gmsh
         print("  Generating mesh...")
-        mesh_file = getdp.generate_mesh(geo_file)
-        print("  Mesh generated successfully")
+        try:
+            mesh_file = getdp.generate_mesh(geo_file)
+            print("  Mesh generated successfully")
+        except subprocess.CalledProcessError as e:
+            print(f"  Error generating mesh: {e}")
+            continue
 
         # Run solver and post-processing
         try:
@@ -41,7 +100,7 @@ def run_all_experiments_and_save_results(
 
             print("  Post-processing completed")
         except subprocess.CalledProcessError as e:
-            print(f"Error running getDP in {exp_dir}: {e}")
+            print(f"  Error running getDP: {e}")
             continue
 
         vtk_files = list(exp_dir.glob("*.vtk"))
@@ -55,7 +114,6 @@ def load_vtk_results(experiment_dir: str):
 
     Args:
         experiment_dir: Name of the experiment directory
-        simulations_dir: Directory containing simulation results
 
     Returns:
         dict: Dictionary mapping VTK file names to PyVista mesh objects
