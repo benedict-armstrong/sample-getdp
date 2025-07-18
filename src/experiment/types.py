@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List
 
 from src.samplers.base import SamplerCfg
 
@@ -11,6 +11,7 @@ class ExperimentCfg:
     name: str
     n_samples: int
     parameters: Dict[str, SamplerCfg]
+    templates: List[str]
 
 
 class Experiment(ABC):

@@ -5,6 +5,7 @@ from .loguniform import LogUniform
 from .normal import Normal
 from .uniform import Uniform
 from .uniform_discrete import UniformDiscrete
+from .sample_context import sample_context
 
 SAMPLER_MAP = {
     "uniform": Uniform,
