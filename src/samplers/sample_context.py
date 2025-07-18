@@ -1,6 +1,6 @@
 from typing import Dict, Any
 
-from src.experiment import ParameterCfgs
+from src.experiment.types import ParameterCfgs
 
 
 def sample_context(parameters: ParameterCfgs) -> Dict[str, Any]:

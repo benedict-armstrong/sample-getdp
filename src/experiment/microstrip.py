@@ -1,4 +1,4 @@
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 import os
 from pathlib import Path
 from typing import List
@@ -25,7 +25,9 @@ class MicrostripParameters:
 @dataclass
 class MicrostripCfg(ExperimentCfg):
     parameters: MicrostripParameters
-    templates: List[str] = ["microstrip.geo.j2", "microstrip.pro.j2"]
+    templates: List[str] | None = field(
+        default_factory=lambda: ["microstrip.geo.j2", "microstrip.pro.j2"]
+    )
 
 
 class Microstrip(Experiment):
