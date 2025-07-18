@@ -3,19 +3,24 @@ import random
 
 import numpy as np
 
-from .base import Sampler
+from .base import Sampler, SamplerCfg
 
 
 @dataclass
-class UniformDiscrete(Sampler):
+class UniformDiscreteCfg(SamplerCfg):
     values: list[float] | None = None
     min: int | None = None
     max: int | None = None
 
+
+@dataclass
+class UniformDiscrete(Sampler):
+    cfg: UniformDiscreteCfg
+
     def sample(self, n_samples: int) -> np.ndarray:
-        if self.values is not None:
-            return np.array([random.choice(self.values) for _ in range(n_samples)])
-        elif self.min is not None and self.max is not None:
-            return np.random.randint(self.min, self.max + 1, n_samples)
+        if self.cfg.values is not None:
+            return np.array([random.choice(self.cfg.values) for _ in range(n_samples)])
+        elif self.cfg.min is not None and self.cfg.max is not None:
+            return np.random.randint(self.cfg.min, self.cfg.max + 1, n_samples)
         else:
             raise ValueError("Either values or min and max must be provided")

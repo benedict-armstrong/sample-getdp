@@ -1,10 +1,6 @@
 defaults:
     - _self_
-
-# List of experiment names to run (corresponds to config files in experiments/)
-experiments_to_run:
-    - magnetic_forces
-    - microstrip
+    - experiment: microstrip
 
 output_dir: out
 template_dir: templates

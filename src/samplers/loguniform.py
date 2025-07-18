@@ -2,13 +2,20 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from .base import Sampler
+from .base import Sampler, SamplerCfg
+
+
+@dataclass
+class LogUniformCfg(SamplerCfg):
+    min: float
+    max: float
 
 
 @dataclass
 class LogUniform(Sampler):
-    min: float
-    max: float
+    cfg: LogUniformCfg
 
     def sample(self, n_samples: int) -> np.ndarray:
-        return np.exp(np.random.uniform(np.log(self.min), np.log(self.max), n_samples))
+        return np.exp(
+            np.random.uniform(np.log(self.cfg.min), np.log(self.cfg.max), n_samples)
+        )

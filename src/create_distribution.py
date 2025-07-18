@@ -1,4 +1,4 @@
-from src.experiments import experiment_registry
+from src.experiment import experiment_registry
 from src.samplers import sample_param
 import hydra
 from omegaconf import DictConfig, OmegaConf

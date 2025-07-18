@@ -1,6 +1,5 @@
 import numpy as np
-from dataclasses import asdict
-from .base import Sampler
+from .base import Sampler, SamplerCfg
 from .uniform import Uniform
 from .normal import Normal
 from .loguniform import LogUniform
@@ -15,11 +14,10 @@ SAMPLER_MAP = {
 }
 
 
-def get_sampler(sampler_name: str) -> Sampler:
-    return SAMPLER_MAP[sampler_name]
+def get_sampler(sampler_cfg: SamplerCfg) -> Sampler:
+    return SAMPLER_MAP[sampler_cfg.name](sampler_cfg)
 
 
 def sample_param(param_cfg, n_samples: int) -> np.ndarray:
-    sampler_name = param_cfg.sampler
-    sampler = SAMPLER_MAP[sampler_name](**asdict(param_cfg))
+    sampler = get_sampler(param_cfg.sampler)
     return sampler.sample(n_samples)

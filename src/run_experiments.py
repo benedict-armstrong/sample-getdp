@@ -1,5 +1,5 @@
 from pathlib import Path
-from .experiments.getdp_cli import GetDPCLI
+from .getdp.getdp_cli import GetDPCLI
 import subprocess
 import json
 

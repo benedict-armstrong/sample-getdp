@@ -2,13 +2,18 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from .base import Sampler
+from .base import Sampler, SamplerCfg
+
+
+@dataclass
+class UniformCfg(SamplerCfg):
+    min: float
+    max: float
 
 
 @dataclass
 class Uniform(Sampler):
-    min: float
-    max: float
+    cfg: UniformCfg
 
     def sample(self, n_samples: int) -> np.ndarray:
-        return np.random.uniform(self.min, self.max, n_samples)
+        return np.random.uniform(self.cfg.min, self.cfg.max, n_samples)
