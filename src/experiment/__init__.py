@@ -1,5 +1,6 @@
-from typing import Dict, Callable, Sequence, Any, Optional
 from pathlib import Path
+from typing import Any, Callable, Dict, Optional, Sequence
+
 from ..config.experiment_config import ExperimentConfig
 
 
@@ -67,7 +68,7 @@ def register_experiment(experiment_type: str):
 # Register available experiments
 @register_experiment("microstrip")
 def _register_microstrip():
-    from .microstrip import run_microstrip_experiments, create_contexts_from_arrays
+    from .microstrip import create_contexts_from_arrays, run_microstrip_experiments
 
     return run_microstrip_experiments, create_contexts_from_arrays
 

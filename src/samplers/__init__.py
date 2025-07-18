@@ -1,10 +1,10 @@
 import numpy as np
-from .base import Sampler, SamplerCfg
-from .uniform import Uniform
-from .normal import Normal
-from .loguniform import LogUniform
-from .uniform_discrete import UniformDiscrete
 
+from .base import Sampler, SamplerCfg
+from .loguniform import LogUniform
+from .normal import Normal
+from .uniform import Uniform
+from .uniform_discrete import UniformDiscrete
 
 SAMPLER_MAP = {
     "uniform": Uniform,

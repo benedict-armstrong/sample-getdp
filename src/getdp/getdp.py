@@ -1,8 +1,9 @@
+import re
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple, Union
+
 import numpy as np
 import pyvista as pv
-from pathlib import Path
-from typing import Dict, List, Tuple, Optional, Union
-import re
 
 
 class GetDPReader:

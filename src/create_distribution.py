@@ -1,9 +1,11 @@
-from src.experiment import experiment_registry
-from src.samplers import sample_param
+from pathlib import Path
+
 import hydra
 from omegaconf import DictConfig, OmegaConf
-from pathlib import Path
+
 from src.config.experiment_config import MainConfig, dict_to_main_config
+from src.experiment import experiment_registry
+from src.samplers import sample_param
 
 
 @hydra.main(version_base=None, config_path="../config", config_name="main")

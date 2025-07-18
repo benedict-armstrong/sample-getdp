@@ -1,7 +1,8 @@
 import subprocess
 from pathlib import Path
-import pyvista as pv
+
 import gmsh
+import pyvista as pv
 
 
 class GmshContext:

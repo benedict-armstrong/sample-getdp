@@ -1,8 +1,8 @@
-from pathlib import Path
-from .getdp.getdp_cli import GetDPCLI
-import subprocess
 import json
+import subprocess
+from pathlib import Path
 
+from .getdp.getdp_cli import GetDPCLI
 
 # Mapping of experiment types to their main geometry and problem files
 EXPERIMENT_FILES = {
