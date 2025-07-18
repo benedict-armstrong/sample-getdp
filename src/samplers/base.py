@@ -6,7 +6,7 @@ import numpy as np
 
 @dataclass
 class SamplerCfg:
-    name: str
+    sampler: str
 
 
 @dataclass
