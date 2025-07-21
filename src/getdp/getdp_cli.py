@@ -1,5 +1,6 @@
 import subprocess
 from pathlib import Path
+from typing import List
 
 import gmsh
 import pyvista as pv
@@ -20,17 +21,18 @@ class GmshContext:
         if self.initialized:
             try:
                 gmsh.finalize()
-            except:
+            except Exception:
                 pass
 
 
 class GetDPCLI:
-    def __init__(self, getdp_path: str = "getdp", gmsh_path: str = "gmsh"):
+    def __init__(self, getdp_path: str = "getdp"):
         self.getdp_path = getdp_path
-        self.gmsh_path = gmsh_path
 
     def generate_mesh(self, geo_file: Path, dim: int = 2) -> Path:
-        """Generate a mesh using gmsh from a .geo file."""
+        """
+        Generate mesh using gmsh from .geo files.
+        """
         msh_file = geo_file.with_suffix(".msh")
 
         with GmshContext() as gmsh:
@@ -46,16 +48,17 @@ class GetDPCLI:
             # Write mesh file
             gmsh.write(str(msh_file))
 
-            print(f"Generated mesh: {msh_file.name}")
-            return msh_file
+        return msh_file
 
-    def run_solver(self, pro_file: Path, case: str = "EleSta_v"):
-        """Run getDP solver for the given .pro file and case."""
-        subprocess.run(
-            [self.getdp_path, str(pro_file.with_suffix("").name), "-solve", case],
-            cwd=pro_file.parent,
-            check=True,
-        )
+    def run_solver(self, *cases: str, pro_file: Path):
+        """Run getDP solver for the given .pro file and cases."""
+
+        for case in cases:
+            subprocess.run(
+                [self.getdp_path, str(pro_file.with_suffix("").name), "-solve", case],
+                cwd=pro_file.parent,
+                check=True,
+            )
 
     def run_post(self, pro_file: Path, pos: str = "Map"):
         """Run getDP post-processing for the given .pro file and pos operation."""

@@ -3,9 +3,9 @@ import numpy as np
 from .base import Sampler, SamplerCfg
 from .loguniform import LogUniform
 from .normal import Normal
+from .sample_context import sample_context
 from .uniform import Uniform
 from .uniform_discrete import UniformDiscrete
-from .sample_context import sample_context
 
 SAMPLER_MAP = {
     "uniform": Uniform,

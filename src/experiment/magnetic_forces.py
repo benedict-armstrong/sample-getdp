@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from pathlib import Path
 
-from src.samplers import UniformDiscrete
 from src.experiment.types import Experiment, ExperimentCfg
+from src.samplers import UniformDiscrete
 
 
 @dataclass
@@ -20,9 +20,6 @@ class MagneticForcesCfg(ExperimentCfg):
 class MagneticForces(Experiment):
     def __init__(self, cfg: ExperimentCfg):
         super().__init__(cfg)
-
-    def sample(self, output_dir: Path) -> None:
-        pass
 
     def run(self):
         pass
