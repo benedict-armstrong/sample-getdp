@@ -1,11 +1,14 @@
+from typing import Any, Dict
+
 import numpy as np
 
-from .base import Sampler, SamplerCfg
-from .loguniform import LogUniform
-from .normal import Normal
-from .sample_context import sample_context
-from .uniform import Uniform
-from .uniform_discrete import UniformDiscrete
+from .base import Sampler
+from .loguniform import LogUniform, LogUniformCfg
+from .normal import Normal, NormalCfg
+from .uniform import Uniform, UniformCfg
+from .uniform_discrete import UniformDiscrete, UniformDiscreteCfg
+
+SamplerCfg = UniformCfg | NormalCfg | LogUniformCfg | UniformDiscreteCfg
 
 SAMPLER_MAP = {
     "uniform": Uniform,
@@ -15,10 +18,14 @@ SAMPLER_MAP = {
 }
 
 
+def sample_context(parameters: Dict[str, SamplerCfg]) -> Dict[str, Any]:
+    context = {}
+    for var, sampler_cfg in parameters.items():
+        sampler = get_sampler(sampler_cfg=sampler_cfg)
+        context[var] = sampler.sample(1)[0]
+
+    return context
+
+
 def get_sampler(sampler_cfg: SamplerCfg) -> Sampler:
-    return SAMPLER_MAP[sampler_cfg.name](sampler_cfg)
-
-
-def sample_param(param_cfg, n_samples: int) -> np.ndarray:
-    sampler = get_sampler(param_cfg.sampler)
-    return sampler.sample(n_samples)
+    return SAMPLER_MAP[sampler_cfg.sampler](sampler_cfg)

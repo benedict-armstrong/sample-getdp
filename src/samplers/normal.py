@@ -1,12 +1,14 @@
 from dataclasses import dataclass
+from typing import Literal
 
 import numpy as np
 
-from .base import Sampler, SamplerCfg
+from .base import Sampler, SamplerBaseCfg
 
 
 @dataclass
-class NormalCfg(SamplerCfg):
+class NormalCfg(SamplerBaseCfg):
+    sampler: Literal["normal"]
     mean: float
     std: float
 

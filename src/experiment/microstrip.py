@@ -1,15 +1,9 @@
-import os
-import uuid
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List
 
-import yaml
-from jinja2 import Environment, FileSystemLoader
-
 from src.experiment.types import Experiment, ExperimentCfg
-from src.samplers import sample_context
-from src.samplers.base import SamplerCfg
+from src.samplers import SamplerCfg
 
 
 @dataclass
@@ -32,6 +26,12 @@ class MicrostripCfg(ExperimentCfg):
 
 class Microstrip(Experiment):
     cfg: MicrostripCfg
+    geo_file: Path = Path("microstrip.geo.j2")
+    pro_file: Path = Path("microstrip.pro.j2")
+    cases: List[str] = field(default_factory=lambda: ["microstrip.case"])
+    post_process_ops: List[str] = field(
+        default_factory=lambda: ["microstrip.post_process.j2"]
+    )
 
     def __init__(self, cfg: MicrostripCfg, experiment_output_dir: Path):
         super().__init__(cfg, experiment_output_dir)

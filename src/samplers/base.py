@@ -5,15 +5,15 @@ import numpy as np
 
 
 @dataclass
-class SamplerCfg:
+class SamplerBaseCfg:
     sampler: str
 
 
 @dataclass
 class Sampler(ABC):
-    cfg: SamplerCfg
+    cfg: SamplerBaseCfg
 
-    def __init__(self, cfg: SamplerCfg):
+    def __init__(self, cfg: SamplerBaseCfg):
         self.cfg = cfg
 
     @abstractmethod

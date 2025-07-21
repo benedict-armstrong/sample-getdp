@@ -4,7 +4,7 @@ import uuid
 from pathlib import Path
 from typing import Any, Dict
 
-import yaml
+import json
 from jinja2 import Environment, FileSystemLoader
 
 
@@ -33,13 +33,13 @@ def render_template(
         variable_end_string="]]",
     )
 
-    templates = template_dir.glob("*.j2")
+    templates = experiment_input_dir.glob("*.j2")
 
     # render templates
     for template_name in templates:
-        template = env.get_template(template_name)
+        template = env.get_template(str(template_name.name))
         rendered = template.render(context)
-        output_name = template_name[:-3]
+        output_name = template_name.stem
         output_path = os.path.join(experiment_output_dir, output_name)
         with open(output_path, "w") as f:
             f.write(rendered)
@@ -52,6 +52,6 @@ def render_template(
     # Save config
     config_path = os.path.join(experiment_output_dir, "config.yaml")
     with open(config_path, "w") as f:
-        yaml.dump(context, f)
+        json.dump(context, f)
 
     return experiment_output_dir

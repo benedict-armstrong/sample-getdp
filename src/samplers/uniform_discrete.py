@@ -1,13 +1,15 @@
 import random
 from dataclasses import dataclass
+from typing import Literal
 
 import numpy as np
 
-from .base import Sampler, SamplerCfg
+from .base import Sampler, SamplerBaseCfg
 
 
 @dataclass
-class UniformDiscreteCfg(SamplerCfg):
+class UniformDiscreteCfg(SamplerBaseCfg):
+    sampler: Literal["uniform_discrete"]
     values: list[float] | None = None
     min: int | None = None
     max: int | None = None

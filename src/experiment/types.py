@@ -1,20 +1,12 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, List, Union
+from typing import Dict, List
 
-from src.experiment import get_experiment
-from src.getdp import render_template
+from src.experiment.factory import get_experiment
+from src.getdp.render_template import render_template
 from src.getdp.getdp_cli import GetDPCLI
-from src.samplers import sample_context
-from src.samplers.base import SamplerCfg
-
-if TYPE_CHECKING:
-    from src.experiment.magnetic_forces import MagneticForcesParameters
-    from src.experiment.microstrip import MicrostripParameters
-
-# Move ParameterCfgs here to break circular import
-ParameterCfgs = Union["MagneticForcesParameters", "MicrostripParameters"]
+from src.samplers import SamplerCfg, sample_context
 
 
 @dataclass
@@ -60,7 +52,6 @@ class Experiment(ABC):
         # return concrete experiment
         return experiment
 
-    @abstractmethod
     def run(self):
         # if needed generate mesh files using gmsh
         mesh_file = self.getdp_cli.generate_mesh(self.geo_file)

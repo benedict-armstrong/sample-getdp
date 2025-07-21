@@ -18,8 +18,8 @@ class MagneticForcesCfg(ExperimentCfg):
 
 
 class MagneticForces(Experiment):
-    def __init__(self, cfg: ExperimentCfg):
-        super().__init__(cfg)
+    def __init__(self, cfg: ExperimentCfg, experiment_output_dir: Path):
+        super().__init__(cfg, experiment_output_dir)
 
     def run(self):
         pass
