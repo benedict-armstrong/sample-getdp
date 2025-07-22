@@ -36,9 +36,7 @@ class Microstrip(Experiment):
 
     def run(self):
         # if needed generate mesh files using gmsh
-        mesh_file = self.getdp_cli.generate_mesh(
-            self.experiment_output_dir / self.geo_file
-        )
+        self.getdp_cli.generate_mesh(self.experiment_output_dir / self.geo_file)
 
         # run getdp solver
         for resolution in self.resolutions:
@@ -55,7 +53,10 @@ class Microstrip(Experiment):
             )
 
         # convert post processing to vtk
-        self.reader.read_experiment(self.experiment_output_dir)
+        self.reader.read_experiment(
+            self.experiment_output_dir,
+            solution_name=self.cfg.name,
+        )
 
         self.reader.create_pyvista_mesh()
         self.reader.export_to_vtk(self.experiment_output_dir / f"{self.cfg.name}.vtk")

@@ -24,7 +24,7 @@ class GetDPReader:
         self.solution_data = {}
         self.mesh = None
 
-    def read_experiment(self, experiment_output_dir: Path):
+    def read_experiment(self, experiment_output_dir: Path, solution_name: str):
         # find msh file
         msh_files = experiment_output_dir.glob("*.msh")
         for msh_file in msh_files:
@@ -36,7 +36,7 @@ class GetDPReader:
             self.read_pre_file(pre_file)
 
         # find res file
-        res_files = experiment_output_dir.glob("microstrip.res")
+        res_files = experiment_output_dir.glob(f"{solution_name}.res")
         for res_file in res_files:
             self.read_res_file(res_file)
 
