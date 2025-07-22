@@ -57,8 +57,5 @@ class Microstrip(Experiment):
         # convert post processing to vtk
         self.reader.read_experiment(self.experiment_output_dir)
 
-        mesh = self.reader.create_pyvista_mesh()
-        self.reader.export_to_vtk(
-            self.experiment_output_dir / f"{self.cfg.name}.vtk",
-            res_filepath=self.experiment_output_dir / f"{self.cfg.name}.res",
-        )
+        self.reader.create_pyvista_mesh()
+        self.reader.export_to_vtk(self.experiment_output_dir / f"{self.cfg.name}.vtk")

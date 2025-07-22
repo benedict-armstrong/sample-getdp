@@ -36,7 +36,7 @@ class GetDPReader:
             self.read_pre_file(pre_file)
 
         # find res file
-        res_files = experiment_output_dir.glob("*.res")
+        res_files = experiment_output_dir.glob("microstrip.res")
         for res_file in res_files:
             self.read_res_file(res_file)
 
@@ -750,7 +750,6 @@ class GetDPReader:
     def export_to_vtk(
         self,
         output_path: Union[str, Path],
-        res_filepath: Optional[Union[str, Path]] = None,
     ):
         """
         Export the mesh and solution data to a VTK file.
@@ -760,12 +759,10 @@ class GetDPReader:
             res_filepath: Optional path to .res file to include solution data
         """
         if self.mesh is None:
-            mesh = self.create_pyvista_mesh(res_filepath)
-        else:
-            mesh = self.mesh
+            raise ValueError("No mesh data loaded. Call create_pyvista_mesh() first.")
 
         output_path = Path(output_path)
-        mesh.save(str(output_path))
+        self.mesh.save(str(output_path))
 
     def export_to_format(
         self,
