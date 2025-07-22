@@ -5,13 +5,13 @@ from typing import Type, TypeVar
 from dacite import Config, from_dict
 from omegaconf import DictConfig, OmegaConf
 
-from src.experiment.types import ExperimentCfg
+from src.experiment.types import ExperimentBaseCfg
 
 
 @dataclass
 class RootCfg:
     output_dir: Path
-    experiment: ExperimentCfg
+    experiment: ExperimentBaseCfg
     template_dir: Path = Path("templates")
 
 

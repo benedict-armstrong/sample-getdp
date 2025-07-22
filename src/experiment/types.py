@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List
@@ -11,25 +11,35 @@ from src.samplers import SamplerCfg, sample_context
 
 
 @dataclass
-class ExperimentCfg:
+class ExperimentBaseCfg:
     name: str
     n_samples: int
+    resolutions: List[str]
+    post_process_ops: List[str]
+    geo_file: Path | None
+    pro_file: Path | None
+    templates: List[Path]
     parameters: Dict[str, SamplerCfg]
-    templates: List[str] | None
 
 
 class Experiment(ABC):
     experiment_output_dir: Path
 
-    def __init__(self, cfg: ExperimentCfg, experiment_output_dir: Path):
+    def __init__(self, cfg: ExperimentBaseCfg, experiment_output_dir: Path):
         self.cfg = cfg
         self.experiment_output_dir = experiment_output_dir
         self.getdp_cli = GetDPCLI()
         self.reader = GetDPReader()
 
+        # if geo and pro files are not defined use name.pro and name.geo
+        if self.cfg.geo_file is None:
+            self.cfg.geo_file = Path(f"{self.cfg.name}.geo")
+        if self.cfg.pro_file is None:
+            self.cfg.pro_file = Path(f"{self.cfg.name}.pro")
+
     @staticmethod
     def sample(
-        cfg: ExperimentCfg,
+        cfg: ExperimentBaseCfg,
         output_dir: Path,
         template_dir: Path,
     ) -> "Experiment":
@@ -55,26 +65,4 @@ class Experiment(ABC):
         return experiment
 
     def run(self):
-        pass
-
-    # Abstract properties  below
-
-    @property
-    @abstractmethod
-    def geo_file(self) -> Path:
-        pass
-
-    @property
-    @abstractmethod
-    def pro_file(self) -> Path:
-        pass
-
-    @property
-    @abstractmethod
-    def resolutions(self) -> List[str]:
-        pass
-
-    @property
-    @abstractmethod
-    def post_process_ops(self) -> List[str]:
         pass

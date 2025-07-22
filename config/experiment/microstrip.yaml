@@ -1,6 +1,17 @@
 name: microstrip
 n_samples: 5
 
+templates:
+    - microstrip.geo.j2
+    - microstrip.pro.j2
+
+resolutions:
+    - EleSta_v
+
+post_process_ops:
+    - Map
+    - Cut
+
 parameters:
     h:
         sampler: uniform

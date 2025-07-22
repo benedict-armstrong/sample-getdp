@@ -28,7 +28,7 @@ def render_template(
 
     # Load jinja2 environment
     env = Environment(
-        loader=FileSystemLoader(experiment_input_dir),
+        loader=FileSystemLoader(str(experiment_input_dir)),
         variable_start_string="[[",
         variable_end_string="]]",
     )
@@ -40,17 +40,17 @@ def render_template(
         template = env.get_template(str(template_name.name))
         rendered = template.render(context)
         output_name = template_name.stem
-        output_path = os.path.join(experiment_output_dir, output_name)
+        output_path = experiment_output_dir / output_name
         with open(output_path, "w") as f:
             f.write(rendered)
 
     # copy accross other files in directory
-    for file in os.listdir(experiment_input_dir):
-        if not file.endswith(".j2"):
-            shutil.copy(experiment_input_dir / file, experiment_output_dir / file)
+    for file in experiment_input_dir.iterdir():
+        if file.is_file() and file.suffix != ".j2":
+            shutil.copy(file, experiment_output_dir / file.name)
 
     # Save config
-    config_path = os.path.join(experiment_output_dir, "config.yaml")
+    config_path = experiment_output_dir / "config.json"
     with open(config_path, "w") as f:
         json.dump(context, f)
 
