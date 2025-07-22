@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Dict, List
 
 from src.experiment.factory import get_experiment
+from src.getdp.getdp import GetDPReader
 from src.getdp.render_template import render_template
 from src.getdp.getdp_cli import GetDPCLI
 from src.samplers import SamplerCfg, sample_context
@@ -24,6 +25,7 @@ class Experiment(ABC):
         self.cfg = cfg
         self.experiment_output_dir = experiment_output_dir
         self.getdp_cli = GetDPCLI()
+        self.reader = GetDPReader()
 
     @staticmethod
     def sample(
@@ -53,17 +55,7 @@ class Experiment(ABC):
         return experiment
 
     def run(self):
-        # if needed generate mesh files using gmsh
-        mesh_file = self.getdp_cli.generate_mesh(self.geo_file)
-
-        # run getdp solver
-        self.getdp_cli.run_solver(cases=self.cases, pro_file=self.pro_file)
-
-        # run post processing
-        self.getdp_cli.run_post(self.pro_file)
-
-        # convert post processing to vtk
-        self.getdp_cli.convert_pos_to_vtk(pos_file=self.pos_file, mesh_file=mesh_file)
+        pass
 
     # Abstract properties  below
 
@@ -79,7 +71,7 @@ class Experiment(ABC):
 
     @property
     @abstractmethod
-    def cases(self) -> List[str]:
+    def resolutions(self) -> List[str]:
         pass
 
     @property

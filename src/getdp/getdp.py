@@ -24,6 +24,22 @@ class GetDPReader:
         self.solution_data = {}
         self.mesh = None
 
+    def read_experiment(self, experiment_output_dir: Path):
+        # find msh file
+        msh_files = experiment_output_dir.glob("*.msh")
+        for msh_file in msh_files:
+            self.read_msh_file(msh_file)
+
+        # find pre file
+        pre_files = experiment_output_dir.glob("*.pre")
+        for pre_file in pre_files:
+            self.read_pre_file(pre_file)
+
+        # find res file
+        res_files = experiment_output_dir.glob("*.res")
+        for res_file in res_files:
+            self.read_res_file(res_file)
+
     def read_msh_file(self, filepath: Union[str, Path]) -> Dict:
         """
         Read a Gmsh .msh file and extract mesh information.
